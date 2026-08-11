@@ -17,7 +17,7 @@ import logging
 import sys
 from datetime import date
 
-from nsedata.build import update
+from nse_core import update
 
 
 def main() -> int:
