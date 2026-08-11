@@ -1,0 +1,43 @@
+name: Refresh NSE EOD data
+
+on:
+  schedule:
+    # 19:15 IST and a 21:30 IST retry, Mon-Fri. Cron is UTC.
+    - cron: "45 13 * * 1-5"
+    - cron: "0 16 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      days:
+        description: "Calendar days of history to keep"
+        default: "400"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Build store
+        run: python build_data.py --days ${{ github.event.inputs.days || 400 }}
+
+      - name: Commit
+        run: |
+          git config user.name  "nse-data-bot"
+          git config user.email "actions@github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+          else
+            git commit -m "data: refresh $(date -u +%Y-%m-%d)"
+            git push
+          fi
