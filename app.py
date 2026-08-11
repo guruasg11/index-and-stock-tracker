@@ -12,8 +12,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from config.universe import BROAD_MARKET, SECTORS
-from nsedata import metrics
+import nse_core as core
+import nse_core as metrics  # metric helpers live in the same module
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 
@@ -204,7 +204,7 @@ with st.sidebar:
     if st.button("Fetch latest from NSE", **_WIDE,
                  help="Downloads any trading days missing from the store."):
         try:
-            from nsedata.build import update as _update
+            from nse_core import update as _update
             with st.spinner("Downloading from NSE…"):
                 m = _update(days_back=400, refresh_constituents=False)
             st.cache_data.clear()
@@ -248,7 +248,7 @@ st.markdown(
 if "view" not in st.session_state:
     st.session_state["view"] = "Indices & sectors"
 if "drill" not in st.session_state:
-    st.session_state["drill"] = BROAD_MARKET[0]
+    st.session_state["drill"] = core.BROAD_MARKET[0]
 
 st.radio(
     "View", ["Indices & sectors", "Constituents", "Compare"],
@@ -265,12 +265,12 @@ def go_to_constituents(name: str):
 
 # --- page 1 -----------------------------------------------------------------
 if view == "Indices & sectors":
-    broad = imx[imx["Index"].isin(BROAD_MARKET)].copy()
-    broad["Index"] = pd.Categorical(broad["Index"], BROAD_MARKET, ordered=True)
+    broad = imx[imx["Index"].isin(core.BROAD_MARKET)].copy()
+    broad["Index"] = pd.Categorical(broad["Index"], core.BROAD_MARKET, ordered=True)
     broad = broad.sort_values("Index")
 
-    sect = imx[imx["Index"].isin(SECTORS)].copy()
-    sect["Index"] = pd.Categorical(sect["Index"], SECTORS, ordered=True)
+    sect = imx[imx["Index"].isin(core.SECTORS)].copy()
+    sect["Index"] = pd.Categorical(sect["Index"], core.SECTORS, ordered=True)
     sect = sect.sort_values("Index")
 
     st.markdown("## Broad market")
